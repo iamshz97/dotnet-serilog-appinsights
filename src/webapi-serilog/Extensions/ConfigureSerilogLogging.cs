@@ -3,6 +3,7 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
 using Serilog.Events;
+using Serilog.Filters;
 using webapi_serilog.Common;
 using webapi_serilog.Constants;
 
@@ -17,6 +18,7 @@ public static class ConfigureSerilogLogging
                 .Enrich.WithProperty("Version", "1.0.0")
                 .WriteTo.Console(
                     outputTemplate: "{Timestamp:HH:mm} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}")
+                .Filter.ByExcluding(Matching.WithProperty<int>("Count", p => p < 10))
                 .WriteTo.Debug();
 
             var logLevelConfigurations = configuration.GetSection(AppSettingsConstants.LogLevel).GetChildren();

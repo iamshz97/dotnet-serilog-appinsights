@@ -36,6 +36,10 @@ public class WeatherForecastController : ControllerBase
             weatherForecasts,
             orderNumber);
 
+        _logger.LogInformation("Weather {Count}", 9);
+        _logger.LogInformation("Weather {Count}", 10);
+        _logger.LogInformation("Weather {Count}", 11);
+
         return weatherForecasts;
     }
 }
