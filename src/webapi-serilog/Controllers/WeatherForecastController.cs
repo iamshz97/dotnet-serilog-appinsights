@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using Serilog.Events;
+using webapi_serilog.Services;
+using webapi_serilog.Services.Interface;
 
 namespace webapi_serilog.Controllers;
 [ApiController]
@@ -12,8 +15,8 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly ILoggingLevelSwitchService _loggingLevelSwitchService;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
     public WeatherForecastController(ILogger<WeatherForecastController> logger, ILoggingLevelSwitchService loggingLevelSwitchService)
     {
         _logger = logger;
@@ -21,31 +24,45 @@ public class WeatherForecastController : ControllerBase
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    [ProducesResponseType(typeof(IEnumerable<WeatherForecast>), StatusCodes.Status200OK)]
+    public IActionResult Get(bool isFailRequest = false)
     {
-        var weatherForecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        try
         {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+            _logger.LogDebug("Processing weather forecast request");
+            _logger.LogDebug("Accessing Database");
 
-        var orderNumber = 1;
+            var weatherForecasts = GetWeatherForecast();
 
-        _logger.LogInformation(
-            "Processing weatherForecast {@weatherForecast}, order number = {@OrderNumber}",
-            weatherForecasts,
-            orderNumber);
+            var avgTemperature = 1;
 
-        _logger.LogInformation("Weather {Count}", 9);
-        _logger.LogInformation("Weather {Count}", 10);
-        _logger.LogInformation("Weather {Count}", 11);
+            _logger.LogInformation(
+                "Processing weatherForecast {@weatherForecast}, avgTemperature = {avgTemperature}",
+                weatherForecasts,
+                avgTemperature);
 
-        return weatherForecasts;
+            if (isFailRequest)
+            {
+                throw new Exception("Fail request");
+            }
+
+            return Ok(weatherForecasts);
+        }
         catch
         {
             _loggingLevelSwitchService.SetLogLevel(LogEventLevel.Debug);
         }
+
+        return BadRequest();
+    }
+
+    private IEnumerable<WeatherForecast> GetWeatherForecast()
+    {
+        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        }).ToArray();
     }
 }
