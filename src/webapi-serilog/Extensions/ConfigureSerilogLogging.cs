@@ -3,7 +3,7 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
+using webapi_serilog.Common;
 using webapi_serilog.Constants;
 
 public static class ConfigureSerilogLogging
@@ -13,7 +13,10 @@ public static class ConfigureSerilogLogging
         builder.UseSerilog((hostingContext, services, loggerConfiguration) =>
         {
             loggerConfiguration
-                .WriteTo.Console(new CompactJsonFormatter())
+                .Enrich.With(new ThreadIdEnricher())
+                .Enrich.WithProperty("Version", "1.0.0")
+                .WriteTo.Console(
+                    outputTemplate: "{Timestamp:HH:mm} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}")
                 .WriteTo.Debug();
 
             var logLevelConfigurations = configuration.GetSection(AppSettingsConstants.LogLevel).GetChildren();
