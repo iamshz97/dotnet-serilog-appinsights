@@ -1,6 +1,14 @@
+using Microsoft.Extensions.Options;
 using Serilog;
+using Serilog.Events;
+using webapi_serilog.Constants;
+using webapi_serilog.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+ConfigurationManager configuration = builder.Configuration;
+
+bool isUseDefaultLogger = configuration.GetValue<bool>(AppSettingsConstants.IsUseDefaultLogger);
 
 // Add services to the container.
 
@@ -8,6 +16,15 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+if (!isUseDefaultLogger)
+{
+    bool isAppInsightSettingsConfigured =
+        !string.IsNullOrEmpty(configuration[AppSettingsConstants.AppInsightConnectionStringEnvironmentVariable]) &&
+        !string.IsNullOrEmpty(configuration[AppSettingsConstants.AppInsightInstrumentationKeyForWebSites]);
+
+    builder.Host.AddSerilogLogging(configuration, isAppInsightSettingsConfigured);
+}
 
 var app = builder.Build();
 
