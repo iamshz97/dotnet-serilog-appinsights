@@ -3,6 +3,8 @@ using Serilog;
 using Serilog.Events;
 using webapi_serilog.Constants;
 using webapi_serilog.Extensions;
+using webapi_serilog.Services.Interface;
+using webapi_serilog.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,8 @@ builder.Services.AddSwaggerGen();
 
 if (!isUseDefaultLogger)
 {
+    builder.Services.AddSingleton<ILoggingLevelSwitchService, LoggingLevelSwitchService>();
+
     bool isAppInsightSettingsConfigured =
         !string.IsNullOrEmpty(configuration[AppSettingsConstants.AppInsightConnectionStringEnvironmentVariable]) &&
         !string.IsNullOrEmpty(configuration[AppSettingsConstants.AppInsightInstrumentationKeyForWebSites]);

@@ -14,8 +14,10 @@ public class WeatherForecastController : ControllerBase
     private readonly ILogger<WeatherForecastController> _logger;
 
     public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, ILoggingLevelSwitchService loggingLevelSwitchService)
     {
         _logger = logger;
+        _loggingLevelSwitchService = loggingLevelSwitchService;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
@@ -41,5 +43,9 @@ public class WeatherForecastController : ControllerBase
         _logger.LogInformation("Weather {Count}", 11);
 
         return weatherForecasts;
+        catch
+        {
+            _loggingLevelSwitchService.SetLogLevel(LogEventLevel.Debug);
+        }
     }
 }

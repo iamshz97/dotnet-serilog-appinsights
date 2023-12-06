@@ -6,6 +6,7 @@ using Serilog.Events;
 using Serilog.Filters;
 using webapi_serilog.Common;
 using webapi_serilog.Constants;
+using webapi_serilog.Services.Interface;
 
 public static class ConfigureSerilogLogging
 {
@@ -13,7 +14,10 @@ public static class ConfigureSerilogLogging
     {
         builder.UseSerilog((hostingContext, services, loggerConfiguration) =>
         {
+            var levelSwitch = services.GetRequiredService<ILoggingLevelSwitchService>().LevelSwitch;
+
             loggerConfiguration
+                .MinimumLevel.ControlledBy(levelSwitch)
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.WithProperty("Version", "1.0.0")
                 .WriteTo.Console(
@@ -22,8 +26,6 @@ public static class ConfigureSerilogLogging
                 .WriteTo.Debug();
 
             var logLevelConfigurations = configuration.GetSection(AppSettingsConstants.LogLevel).GetChildren();
-
-            loggerConfiguration.MinimumLevel.Is(LogEventLevel.Warning);
 
             foreach (IConfigurationSection logLevelConfiguration in logLevelConfigurations)
             {
@@ -39,7 +41,7 @@ public static class ConfigureSerilogLogging
                 {
                     if (configKey == AppSettingsConstants.Default)
                     {
-                        loggerConfiguration.MinimumLevel.Is(result);
+                        levelSwitch.MinimumLevel = result;
                         continue;
                     }
 
