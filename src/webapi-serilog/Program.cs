@@ -1,3 +1,5 @@
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +10,27 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+if (!isUseDefaultLogger)
+{
+    app.UseSerilogRequestLogging(options =>
+    {
+        // Customize the message template
+        options.MessageTemplate = "Handled {RequestPath} RequestBody {RequestBody} RequestHeaders {RequestHeaders} RequestScheme {RequestScheme}";
+
+        // Emit debug-level events instead of the defaults
+        options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;
+
+        // Attach additional properties to the request completion event
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestBody", httpContext.Request.Body);
+            diagnosticContext.Set("RequestHeaders", httpContext.Request.Headers);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        };
+    });
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
